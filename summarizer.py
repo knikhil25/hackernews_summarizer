@@ -12,16 +12,20 @@ def generate_global_summary(articles_data):
     context += "Requirements:\n"
     context += "1. Write in a clear, engaging essay style with distinct paragraphs.\n"
     context += "2. Each paragraph must be substantial, approximately 100 words long.\n"
-    context += "3. START each paragraph with the Title of the main article, wrapped in <b> tags (e.g., <b>Title</b>: ...).\n"
-    context += "4. Use <b> tags for emphasis where appropriate, instead of asterisks.\n"
-    context += "5. Do NOT introduction or conclusion bloat. Jump straight into the news.\n"
-    context += "6. Ignore any text that looks like navigation menus, pricing tables, or garbage.\n\n"
+    context += "3. STRICT FORMATTING START: Start each paragraph with: (Points: <score>) <b><title></b>\n"
+    context += "4. STRICT FORMATTING END: End each paragraph with: (Posted <age> ago) <a href=\"https://news.ycombinator.com/item?id=<id>\" target=\"_blank\">View on HN</a>\n"
+    context += "5. Use <b> tags for emphasis where appropriate.\n"
+    context += "6. Do NOT introduction or conclusion bloat. Jump straight into the news.\n"
+    context += "7. Ignore any text that looks like navigation menus, pricing tables, or garbage.\n\n"
     context += "Articles:\n"
     
     valid_articles = 0
     for art in articles_data:
         title = art.get('title', 'Unknown')
         content = art.get('content', '')
+        score = art.get('score', 0)
+        age = art.get('age_text', 'recently')
+        hn_id = art.get('id', '')
         
         # Skip if content is too short
         if len(content) < 100:
@@ -31,7 +35,7 @@ def generate_global_summary(articles_data):
         # 1500 chars is usually enough for the core point
         truncated_content = content[:1500].replace('\n', ' ')
         
-        context += f"--- ARTICLE: {title} ---\n{truncated_content}\n\n"
+        context += f"--- ARTICLE: {title} (ID: {hn_id}, Score: {score}, Age: {age}) ---\n{truncated_content}\n\n"
         valid_articles += 1
         
     if valid_articles == 0:

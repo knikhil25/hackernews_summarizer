@@ -8,15 +8,15 @@ def generate_global_summary(articles_data):
     Generates a structured global summary using Ollama.
     """
     # Prepare the context
-    context = "You are a Tech News Editor. Summarize the following top 10 articles into a cohesive Global Tech Digest.\n"
+    context = "You are a strict summarization engine. You must summarize the provided articles individually.\n"
     context += "Requirements:\n"
-    context += "1. Write in a clear, engaging essay style with distinct paragraphs.\n"
-    context += "2. Each paragraph must be substantial, approximately 100 words long.\n"
-    context += "3. STRICT FORMATTING START: Start each paragraph with: (Points: <score>) <b><title></b>\n"
-    context += "4. STRICT FORMATTING END: End each paragraph with: (Posted <age> ago) <a href=\"https://news.ycombinator.com/item?id=<id>\" target=\"_blank\">View on HN</a>\n"
-    context += "5. Use <b> tags for emphasis where appropriate.\n"
-    context += "6. Do NOT introduction or conclusion bloat. Jump straight into the news.\n"
-    context += "7. Ignore any text that looks like navigation menus, pricing tables, or garbage.\n\n"
+    context += "1. Process every single article provided below. Output them as a list of HTML blocks.\n"
+    context += "2. SEPARATOR: Put exactly TWO newlines (\\n\\n) between each article summary.\n"
+    context += "3. TITLE FORMAT: Start each article block with: <b><title></b><br>\n"
+    context += "4. CONTENT: In the next line, write exactly ONE paragraph of summary text.\n"
+    context += "5. FOOTER FORMAT: Append this HTML to the end of the text on the next line. IMPORTANT: include age like this: (inline): (Posted <age> ago) <a href=\"https://news.ycombinator.com/item?id=<id>\" target=\"_blank\">View on HN</a>\n"
+    context += "6. CRITICAL: Do NOT use markdown (**bold**). Use HTML <b>bold</b> only. Do NOT bold the footer.\n"
+    context += "7. Do not include any intro, outro, or headings like 'Global Tech Digest'.\n\n"
     context += "Articles:\n"
     
     valid_articles = 0
@@ -52,8 +52,13 @@ def generate_global_summary(articles_data):
         ])
         
         content = response['message']['content']
-        # Convert **text** to <b>text</b> just in case
-        content = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', content)
+        
+        # 1. Strip any markdown bold asterisks that the LLM might still output
+        content = content.replace('**', '')
+
+        # 2. Ensure footer connects to the paragraph (remove newlines before footer)
+        content = re.sub(r'(\n|\r)+\s*\(Posted', ' (Posted', content)
+
         return content
         
     except Exception as e:

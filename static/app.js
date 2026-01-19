@@ -42,11 +42,21 @@ startBtn.addEventListener('click', async () => {
 
 function renderData(data) {
     // 1. Render Global Summary
-    // Replace newlines with <br> or <p> for the essay look
     const rawSummary = data.summary || "No summary could be generated.";
-    const formattedSummary = rawSummary.split('\n\n').map(p => `<p>${p}</p>`).join('');
 
-    globalSummaryText.innerHTML = formattedSummary;
+    // Split by double newlines but also filter out any empty strings or literal \n sequences
+    const points = rawSummary.split(/\n\n|\\n\\n/).filter(p => p.trim().length > 0);
+
+    globalSummaryText.innerHTML = points.map(point => {
+        let content = point.trim();
+
+        // Use regex to inject a class into the footer for better styling
+        // The footer starts with (Posted...
+        content = content.replace(/(\(Posted.*)/, '<div class="pill-footer">$1</div>');
+
+        // Wrap the whole point in a capsule div
+        return `<div class="summary-capsule">${content}</div>`;
+    }).join('');
 
     // 2. Render Articles List
     const articles = data.articles;
@@ -61,7 +71,7 @@ function renderData(data) {
         const item = document.createElement('div');
         item.className = 'card article-item';
         // Simpler card for list view
-
+        console.log(article);
         item.innerHTML = `
             <div class="card-header" style="margin-bottom:0.5rem;">
                 <span class="badge">${article.score} pts</span>
